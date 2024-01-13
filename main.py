@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from DecisionTree.DecisionTree import train_decision_tree
 from sklearn.impute import SimpleImputer
@@ -9,6 +10,8 @@ from itertools import combinations
 from GradientBoostingModel.GradientBoostingModel import train_gradient_boosting
 from RandomForest.RandomForest import train_random_forest
 from itertools import combinations  # Import combinations from itertools
+from ConvolutionalNeuralNetworks.ConvolutionalNeuralNetworks import create_cnn_model
+import cv2
 
 # Load your dataset (replace 'your_dataset.csv' with the actual file path)
 df = pd.read_csv(r'C:\\Users\\iremo\\PycharmProjects\\pythonProject1\\outputsu.csv')
@@ -87,3 +90,30 @@ for feature in feature_names_gb:
         plt.show()
     else:
         print(f"Skipping PDP plot for feature {feature} as no data is available.")
+
+
+# Function to preprocess an image
+def preprocess_image(image_path):
+    img = cv2.imread(image_path)
+    img = cv2.resize(img, (64, 64))
+    img = img / 255.0  # Normalize pixel values to be between 0 and 1
+    return np.expand_dims(img, axis=0)  # Add batch dimension
+
+# Function to use the CNN model
+def predict_image(model, image_path):
+    preprocessed_image = preprocess_image(image_path)
+    prediction = model.predict(preprocessed_image)
+    return prediction
+
+if __name__ == "__main__":
+    # Create and compile the CNN model
+    cnn_model = create_cnn_model()
+
+    # Load your trained weights if available
+    # cnn_model.load_weights('your_weights.h5')
+
+    # Example of using the model to predict an image
+    image_path = 'path/to/your/image.jpg'
+    prediction_result = predict_image(cnn_model, image_path)
+
+    print("Prediction Result:", prediction_result)
