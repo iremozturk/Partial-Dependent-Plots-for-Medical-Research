@@ -1,31 +1,22 @@
+# ConvolutionalNeuralNetworks.py
 
 import tensorflow as tf
 
-from tensorflow.keras import layers, models
-
-
-def create_cnn_model(input_shape=(64, 64, 3), num_classes=10):
-    model = models.Sequential()
-
-    # Convolutional layers
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
-    model.add(layers.MaxPooling2D((2, 2)))
-
-    # Flatten layer
-    model.add(layers.Flatten())
-
-    # Dense (fully connected) layers
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(num_classes, activation='softmax'))
-
-    # Compile the model
-    model.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
-
+def create_cnn_model():
+    # Implement your CNN model creation logic here
+    # Example:
+    model = tf.keras.Sequential()
+    # Add layers to the model
     return model
+
+def preprocess_image(image_path):
+    img = tf.keras.preprocessing.image.load_img(image_path, target_size=(64, 64), color_mode="rgb")
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    img_array = img_array / 255.0  # Normalize pixel values to be between 0 and 1
+    return tf.expand_dims(img_array, axis=0)  # Add batch dimension
+
+def predict_image(model, image_path):
+    preprocessed_image = preprocess_image(image_path)
+    prediction = model.predict(preprocessed_image)
+    return prediction
+

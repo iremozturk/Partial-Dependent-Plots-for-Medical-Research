@@ -1,17 +1,16 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from DecisionTree.DecisionTree import train_decision_tree
 from sklearn.impute import SimpleImputer
 from pdpbox import pdp
-from itertools import combinations
-from GradientBoostingModel.GradientBoostingModel import train_gradient_boosting
-from RandomForest.RandomForest import train_random_forest
-from itertools import combinations  # Import combinations from itertools
-from ConvolutionalNeuralNetworks.ConvolutionalNeuralNetworks import create_cnn_model
+from ConvolutionalNeuralNetworks.ConvolutionalNeuralNetworks import create_cnn_model, predict_image
+from DecisionTree.DecisionTree import train_decision_tree, predict_decision_tree
+from RandomForest.RandomForest import train_random_forest, predict_random_forest
+from SupportVectorMachines.SupportVectorMachines import train_svm, predict_svm
 import cv2
+import tensorflow as tf
+
 
 # Load your dataset (replace 'your_dataset.csv' with the actual file path)
 df = pd.read_csv(r'C:\\Users\\iremo\\PycharmProjects\\pythonProject1\\outputsu.csv')
@@ -42,78 +41,80 @@ X = imputer.fit_transform(X)
 # Split your data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train a decision tree model
-decision_tree, feature_importances = train_decision_tree(X_train, y_train)
+# Train and predict using Decision Tree
+decision_tree, feature_importances_dt = train_decision_tree(X_train, y_train)
+prediction_dt = predict_decision_tree(decision_tree, X_test)
+
+# Train and predict using Random Forest
 random_forest, feature_importances_rf = train_random_forest(X_train, y_train)
-gradient_boosting, feature_importances_gb = train_gradient_boosting(X_train, y_train)
+prediction_rf = predict_random_forest(random_forest, X_test)
 
-# Identify the top 2 features based on importance
+# Train and predict using SVM
+svm_model = train_svm(X_train, y_train)
+prediction_svm = predict_svm(svm_model, X_test)
+
+# Identify the top 2 features based on importance for each model
 top_n = 2  # Change this to 2 to select the top 2 features
-important_features = np.argsort(feature_importances)[::-1][:top_n]
+important_features_dt = np.argsort(feature_importances_dt)[::-1][:top_n]
 important_features_rf = np.argsort(feature_importances_rf)[::-1][:top_n]
-important_features_gb = np.argsort(feature_importances_gb)[::-1][:top_n]
 
-# Convert X_train back to a DataFrame and extract the names of the top 2 features
+# Convert X_train back to a DataFrame and extract the names of the top 2 features for each model
+X_train_df_dt = pd.DataFrame(X_train, columns=df.columns[important_features_dt])
+feature_names_dt = X_train_df_dt.columns
+
 X_train_df_rf = pd.DataFrame(X_train, columns=df.columns[important_features_rf])
 feature_names_rf = X_train_df_rf.columns
 
-X_train_df_gb = pd.DataFrame(X_train, columns=df.columns[important_features_gb])
-feature_names_gb = X_train_df_gb.columns
-
-print("Top 2 Features By (Gradient Boosting):", feature_names_gb)
-
-#print("Top 2 Features:", feature_names)
-#print("X_train shape before DataFrame conversion:", X_train.shape)
-#print("X_train shape:", X_train_df.shape)
-#print("X_train.columns:", X_train_df.columns)
-
-# Create partial dependence plots (PDP) for top features
-#for feature in feature_names_rf:
-#    pdp_feature = pdp.pdp_isolate(model=random_forest, dataset=X_train_df_rf, model_features=feature_names_rf, feature=feature)
-
-    # Check if there are NaN values in pdp_feature before attempting to plot
-#    if not np.isnan(pdp_feature.pdp).all():
-#        pdp.pdp_plot(pdp_feature, feature_name=feature)
-#        plt.title(f'Partial Dependence Plot for {feature} with binaryClass')
-#       plt.show()
-#    else:
-#        print(f"Skipping PDP plot for feature {feature} as no data is available.")
-
-# Create partial dependence plots for top features from gradient boosting
-for feature in feature_names_gb:
-    pdp_feature_gb = pdp.pdp_isolate(model=gradient_boosting, dataset=X_train_df_gb, model_features=feature_names_gb, feature=feature)
-
-    # Check if there are NaN values in pdp_feature_gb before attempting to plot
-    if not np.isnan(pdp_feature_gb.pdp).all():
-        pdp.pdp_plot(pdp_feature_gb, feature_name=feature)
-        plt.title(f'Partial Dependence Plot for {feature} with binaryClass (Gradient Boosting)')
-        plt.show()
+# Display PDP plots for Decision Tree
+for feature in feature_names_dt:
+    pdp_feature_dt = pdp.pdp_isolate(model=decision_tree, dataset=X_train_df_dt, model_features=feature_names_dt, feature=feature)
+    if not np.isnan(pdp_feature_dt.pdp).all():
+        pdp.pdp_plot(pdp_feature_dt, feature_name=feature)
+        plt.title(f'Partial Dependence Plot for {feature} with binaryClass (Decision Tree)')
+        plt.savefig(f'pdp_dt_{feature}.png')
+        plt.close()
     else:
         print(f"Skipping PDP plot for feature {feature} as no data is available.")
 
+# Display PDP plots for Random Forest
+for feature in feature_names_rf:
+    pdp_feature_rf = pdp.pdp_isolate(model=random_forest, dataset=X_train_df_rf, model_features=feature_names_rf, feature=feature)
+    if not np.isnan(pdp_feature_rf.pdp).all():
+        pdp.pdp_plot(pdp_feature_rf, feature_name=feature)
+        plt.title(f'Partial Dependence Plot for {feature} with binaryClass (Random Forest)')
+        plt.savefig(f'pdp_rf_{feature}.png')
+        plt.close()
+    else:
+        print(f"Skipping PDP plot for feature {feature} as no data is available.")
 
-# Function to preprocess an image
-def preprocess_image(image_path):
+# Display PDP plots for SVM (you can modify this based on your SVM model's interpretation)
+# ...
+
+# Train and predict using CNN
+cnn_model = create_cnn_model()
+# Load your trained weights if available
+# cnn_model.load_weights('your_weights.h5')
+
+# Example of using the model to predict multiple images
+image_paths = [r'C:\Users\iremo\PycharmProjects\pythonProject1\pdp_rf_age.png',
+               r'C:\Users\iremo\PycharmProjects\pythonProject1\pdp_rf_sex.png',
+               r'C:\Users\iremo\PycharmProjects\pythonProject1\pdp_dt_age.png',
+               r'C:\Users\iremo\PycharmProjects\pythonProject1\pdp_dt_sex.png']
+for image_path in image_paths:
+    prediction_cnn = predict_image(cnn_model, image_path)
+
+    # Display the input image
     img = cv2.imread(image_path)
-    img = cv2.resize(img, (64, 64))
-    img = img / 255.0  # Normalize pixel values to be between 0 and 1
-    return np.expand_dims(img, axis=0)  # Add batch dimension
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.title("Input Image")
+    plt.show()
 
-# Function to use the CNN model
-def predict_image(model, image_path):
-    preprocessed_image = preprocess_image(image_path)
-    prediction = model.predict(preprocessed_image)
-    return prediction
+    # Display the prediction result
+    print(f"Prediction Result (CNN) for {image_path}: {prediction_cnn}")
 
-if __name__ == "__main__":
-    # Create and compile the CNN model
-    cnn_model = create_cnn_model()
+    # Save the prediction result to a file
+    result_file_path = f'prediction_result_{os.path.basename(image_path)}.txt'
+    with open(result_file_path, 'w') as result_file:
+        result_file.write(f"Prediction Result (CNN) for {image_path}: {prediction_cnn}")
 
-    # Load your trained weights if available
-    # cnn_model.load_weights('your_weights.h5')
-
-    # Example of using the model to predict an image
-    image_path = 'path/to/your/image.jpg'
-    prediction_result = predict_image(cnn_model, image_path)
-
-    print("Prediction Result:", prediction_result)
+    print(f"Saved prediction result at {result_file_path}")

@@ -26,3 +26,8 @@ def train_random_forest(X_train, y_train, n_estimators=100, random_state=None):
     feature_importances = random_forest.feature_importances_
 
     return random_forest, feature_importances
+def predict_random_forest(model, X_test):
+    # Implement Random Forest prediction logic using the provided model
+    # Example:
+    prediction = model.predict(X_test)
+    return prediction

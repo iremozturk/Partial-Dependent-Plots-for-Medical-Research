@@ -11,3 +11,8 @@ def train_decision_tree(X, y):
     # Return the trained decision tree model and feature importances
     return decision_tree, feature_importances
 
+def predict_decision_tree(model, X_test):
+    # Implement Decision Tree prediction logic using the provided model
+    # Example:
+    prediction = model.predict(X_test)
+    return prediction

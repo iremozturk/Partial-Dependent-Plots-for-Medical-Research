@@ -2,25 +2,23 @@
 
 from sklearn.svm import SVC
 
-def train_svm(X_train, y_train, kernel='rbf', C=1.0, gamma='scale', random_state=None):
-    """
-    Train a Support Vector Machine (SVM) classifier and return the trained model.
+def train_svm(X_train, y_train):
+    # Implement your SVM training logic here
+    # Example:
+    svm_model = SVC()
+    svm_model.fit(X_train, y_train)
+    return svm_model  # Return only the SVM model
 
-    Parameters:
-    - X_train: Training data features.
-    - y_train: Training data target.
-    - kernel: Specifies the kernel type ('linear', 'poly', 'rbf', 'sigmoid', etc.).
-    - C: Regularization parameter.
-    - gamma: Kernel coefficient for 'rbf', 'poly', and 'sigmoid'.
-    - random_state: Seed for random number generator.
+def predict_svm(model, X_test):
+    # Implement SVM prediction logic using the provided model
+    # Example:
+    prediction = model.predict(X_test)
+    return prediction
 
-    Returns:
-    - SVM model
-    """
-    # Create a SVM classifier
-    svm_classifier = SVC(kernel=kernel, C=C, gamma=gamma, random_state=random_state)
-
-    # Train the model
-    svm_classifier.fit(X_train, y_train)
-
-    return svm_classifier
+def calculate_svm_feature_importance(svm_model, X_train):
+    # Implement your SVM model's interpretation for feature importance if applicable
+    # Example:
+    # Calculate feature importance based on the magnitude of support vector coefficients
+    coef_magnitudes = abs(svm_model.dual_coef_)
+    feature_importances = coef_magnitudes.sum(axis=0)
+    return feature_importances
