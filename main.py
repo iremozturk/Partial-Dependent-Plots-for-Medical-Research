@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -112,9 +114,11 @@ for image_path in image_paths:
     # Display the prediction result
     print(f"Prediction Result (CNN) for {image_path}: {prediction_cnn}")
 
-    # Save the prediction result to a file
-    result_file_path = f'prediction_result_{os.path.basename(image_path)}.txt'
-    with open(result_file_path, 'w') as result_file:
-        result_file.write(f"Prediction Result (CNN) for {image_path}: {prediction_cnn}")
+    # Save the prediction result as a PNG image
+    result_image_path = f'prediction_result_{os.path.basename(image_path)}.png'
+    plt.imshow(np.squeeze(prediction_cnn, axis=0))  # Assuming prediction_cnn is an image
+    plt.title(f"Prediction Result (CNN) for {image_path}")
+    plt.savefig(result_image_path)
+    plt.close()
 
-    print(f"Saved prediction result at {result_file_path}")
+    print(f"Saved prediction result image at {result_image_path}")
