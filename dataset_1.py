@@ -1,14 +1,13 @@
-# data_cleaning.py
+# data cleaning
 
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 
-def clean_dataset1(dataset_path):
-    # Load your dataset (replace 'your_dataset.csv' with the actual file path)
-    # Load your dataset (replace 'your_dataset.csv' with the actual file path)
-    df = pd.read_csv(dataset_path)
+def clean_dataset1(file_path):
+
+    df = pd.read_csv(file_path)
 
     # Convert columns with non-numeric values to numeric (0 and 1)
     columns_to_convert = ['on thyroxine', 'query on thyroxine', 'on antithyroid medication', 'sick', 'pregnant',
@@ -38,4 +37,4 @@ def clean_dataset1(dataset_path):
 
     return X_train, X_test, y_train, y_test, X
 
-# Add similar functions for other datasets if needed
+# I will add similar functions for other datasets if needed
