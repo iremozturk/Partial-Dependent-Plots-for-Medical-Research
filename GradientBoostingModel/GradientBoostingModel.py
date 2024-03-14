@@ -1,29 +1,34 @@
-# GradientBoostingModel.py
-
 from sklearn.ensemble import GradientBoostingClassifier
 
-def train_gradient_boosting(X_train, y_train, n_estimators=100, learning_rate=0.1, random_state=None):
+def train_gradient_boosting(X, y):
     """
-    Train a gradient boosting model and return the trained model and feature importances.
+    Train a Gradient Boosting classifier.
 
     Parameters:
-    - X_train: Training data features.
-    - y_train: Training data target.
-    - n_estimators: Number of boosting stages to be run.
-    - learning_rate: Step size to shrink the contribution of each tree.
-    - random_state: Seed for random number generator.
+        X (array-like): Training features.
+        y (array-like): Training labels.
 
     Returns:
-    - GradientBoosting model
-    - Feature importances
+        model (GradientBoostingClassifier): Trained Gradient Boosting model.
     """
-    # Create a gradient boosting classifier
-    gradient_boosting = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state)
-
-    # Train the model
-    gradient_boosting.fit(X_train, y_train)
-
-    # Get feature importances
+    # Create and train a Gradient Boosting model
+    gradient_boosting = GradientBoostingClassifier()
+    gradient_boosting.fit(X, y)
     feature_importances = gradient_boosting.feature_importances_
-
+    # Return the trained Gradient Boosting model
     return gradient_boosting, feature_importances
+
+def predict_gradient_boosting(model, X_test):
+    """
+    Make predictions using a trained Gradient Boosting model.
+
+    Parameters:
+        model (GradientBoostingClassifier): Trained Gradient Boosting model.
+        X_test (array-like): Test features.
+
+    Returns:
+        prediction (array): Predicted labels.
+    """
+    # Implement Gradient Boosting prediction logic using the provided model
+    prediction = model.predict(X_test)
+    return prediction

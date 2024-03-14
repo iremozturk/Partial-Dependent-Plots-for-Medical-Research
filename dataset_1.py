@@ -1,5 +1,4 @@
-# data cleaning
-
+import os
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
@@ -7,16 +6,20 @@ from sklearn.model_selection import train_test_split
 
 def clean_dataset1(file_path):
 
-    df = pd.read_csv(file_path)
+    cleaned_file_path = "cleaned_dataset_1.csv"
 
-    # Convert columns with non-numeric values to numeric (0 and 1)
-    columns_to_convert = ['on thyroxine', 'query on thyroxine', 'on antithyroid medication', 'sick', 'pregnant',
-                          'thyroid surgery', 'I131 treatment', 'query hypothyroid', 'query hyperthyroid', 'lithium',
-                          'goitre', 'tumor', 'hypopituitary', 'psych', 'TSH measured', 'T3 measured', 'TT4 measured',
-                          'T4U measured', 'FTI measured', 'TBG measured']
+    if not os.path.exists(cleaned_file_path):
+        # Perform data cleaning steps if the cleaned dataset doesn't exist
+        df = pd.read_csv(
+            "C:\\Users\\iremo\\PycharmProjects\\pythonProject1\\outputsu.csv")
+        # Perform data cleaning steps...
+        # Save the cleaned DataFrame to CSV
+        df.to_csv(file_path, index=False)
+    else:
+        # Now load the cleaned dataset
+        df = pd.read_csv(file_path)
 
-    for column in columns_to_convert:
-        df[column] = df[column].map({'f': 0, 't': 1})
+
 
     df['binaryClass'] = df['binaryClass'].map({'N': 0, 'P': 1})
 
@@ -24,17 +27,19 @@ def clean_dataset1(file_path):
     df.replace('?', np.nan, inplace=True)
 
     # Convert all columns to float
-    df = df.astype(float)
+    #df = df.astype(float)
 
     # Separate features and target
     X = df.drop(columns=['binaryClass'])
     y = df['binaryClass']
-    imputer = SimpleImputer(strategy='mean')
+    imputer = SimpleImputer(strategy='most_frequent')
     X = imputer.fit_transform(X)
+
+
+    column_names = df.columns.tolist()
 
     # Split your data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    return X_train, X_test, y_train, y_test, X
 
-# I will add similar functions for other datasets if needed
+    return X_train, X_test, y_train, y_test, X, column_names

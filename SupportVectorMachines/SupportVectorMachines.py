@@ -25,5 +25,5 @@ def predict_svm(model, X_test):
 def calculate_svm_feature_importance(svm_model):
     # Calculate feature importance based on the magnitude of support vector coefficients
     coef_magnitudes = abs(svm_model.dual_coef_)
-    feature_importance = coef_magnitudes.sum(axis=0)
-    return feature_importance
+    feature_importances = coef_magnitudes.sum(axis=0)
+    return feature_importances
