@@ -1,18 +1,19 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
 
-def clean_dataset4(file_path):
-    cleaned_file_path = "cleaned_dataset_4.csv"
+def clean_dataset7(file_path):
+
+    cleaned_file_path = "cleaned_dataset_7.csv"
 
     if not os.path.exists(cleaned_file_path):
         # Perform data cleaning steps if the cleaned dataset doesn't exist
-        df = pd.read_csv(r"C:\Users\iremo\PycharmProjects\pythonProject1\heart_disease_uci.csv")
+        df = pd.read_csv(r"C:\Users\iremo\PycharmProjects\pythonProject1\diabetes-7.csv")
+        # Drop the "id" column
+        # df.drop(columns=['id'], inplace=True)
 
-        # Drop columns 'id' and 'dataset' if they exist
-        df.drop(columns=['id', 'dataset'], errors='ignore', inplace=True)
         # Replace non-numeric values with numeric equivalents
         non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns
         for col in non_numeric_cols:
@@ -25,12 +26,12 @@ def clean_dataset4(file_path):
         # Now load the cleaned dataset
         df = pd.read_csv(file_path)
 
-        # Convert non-numeric values to NaN
+    # Convert non-numeric values to NaN
     df.replace('?', np.nan, inplace=True)
 
     # Separate features and target
-    X = df.drop(columns=['num'])
-    y = df['num']
+    X = df.drop(columns=['Outcome'])
+    y = df['Outcome']
 
     # Get column names before converting to numpy array
     column_names = X.columns.tolist()
@@ -46,5 +47,3 @@ def clean_dataset4(file_path):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     return X_train, X_test, y_train, y_test, X, column_names
-
-

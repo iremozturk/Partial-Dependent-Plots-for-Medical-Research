@@ -55,19 +55,18 @@ def calculate_pdp(model, X, feature_of_interest, feature_values):
     return pdp_values
 
 
-import os
 
 
-def save_images(fig, model_name, feature_name, dataset_number, save_path):
-    # Create the directory if it doesn't exist
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+def save_images(fig, model_name, feature_name, dataset_number, save_dir="images"):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # Replace problematic characters in the feature name
+    feature_name = feature_name.replace(">", "_gt_").replace("<", "_lt_").replace("/", "_")
 
     file_name = f"{model_name}_dataset_{dataset_number}_{feature_name}.svg"
-    file_path = os.path.join(save_path, file_name)
-
+    file_path = os.path.join(save_dir, file_name)
     fig.savefig(file_path)
-
 
 
 def train_and_plot(dataset_number, num_top_features):
