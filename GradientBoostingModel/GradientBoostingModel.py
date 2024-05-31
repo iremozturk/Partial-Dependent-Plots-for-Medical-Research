@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 def train_gradient_boosting(X_train, y_train, num_top_features):
     """

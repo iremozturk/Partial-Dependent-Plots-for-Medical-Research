@@ -1,6 +1,8 @@
 import numpy as np
 from pygam import LinearGAM
 from sklearn.metrics import mean_squared_error
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 
 def train_gam(X_train, y_train, num_top_features):

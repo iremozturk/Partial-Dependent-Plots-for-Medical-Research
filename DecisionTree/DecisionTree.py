@@ -1,5 +1,8 @@
 from sklearn.tree import DecisionTreeClassifier
 import numpy as np
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 def train_decision_tree(X, y, num_top_features):
     """
     Train a decision tree classifier.

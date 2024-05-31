@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.svm import SVC
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 
 def train_svm(X_train, y_train, num_top_features):

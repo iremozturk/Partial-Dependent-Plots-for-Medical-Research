@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 
 def train_random_forest(X_train, y_train, num_top_features, n_estimators=100, random_state=None):

@@ -1,47 +1,122 @@
-import os
-import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+import matplotlib.pyplot as plt
 import numpy as np
-def create_cnn_model(images_dir):
-    # Define the image dimensions
-    image_shape = (64, 64, 1)
+from pdpbox import pdp
+import pandas as pd
+from PIL import Image
 
-    # Load and preprocess the images
-    image_data = []
+
+def pdp_to_img_array(pdp_isol, feature_name):
+    fig, axes = pdp.pdp_plot(pdp_isol, feature_name)
+    fig.canvas.draw()
+    img_array = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+    img_array = img_array.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    plt.close(fig)
+
+    img = Image.fromarray(img_array)
+    img = img.resize((224, 224))
+    img_array = np.array(img)
+
+    return img_array
+
+
+def generate_pdp_images_and_labels(models, X_df, features, num_classes):
+    images = []
     labels = []
+    aggregated_values = None
+    for model_idx, (model_name, model) in enumerate(models.items()):
+        for feature_name in features:
+            pdp_isol = pdp.pdp_isolate(model=model, dataset=X_df, model_features=X_df.columns.tolist(),
+                                       feature=feature_name)
+            img_array = pdp_to_img_array(pdp_isol, feature_name)
+            if img_array is not None:
+                images.append(img_array)
+                label = np.zeros(num_classes)
+                label[model_idx] = 1
+                labels.append(label)
 
-    # Iterate over subdirectories (assuming each subdirectory represents a class)
-    for class_name in os.listdir(images_dir):
-        class_dir = os.path.join(images_dir, class_name)
-        if os.path.isdir(class_dir):
-            # Get all image files in the class directory
-            class_images = [f for f in os.listdir(class_dir) if f.endswith('.jpg') or f.endswith('.png')]
-            # Load and preprocess each image
-            for img_name in class_images:
-                img_path = os.path.join(class_dir, img_name)
-                img = tf.keras.preprocessing.image.load_img(img_path, target_size=(image_shape[0], image_shape[1]))
-                img_array = tf.keras.preprocessing.image.img_to_array(img)
-                img_array = tf.image.rgb_to_grayscale(img_array)
-                img_array = img_array / 255.0  # Normalize pixel values to [0, 1]
-                image_data.append(img_array)
-                labels.append(class_name)
+                values = pdp_isol.pdp
+                if aggregated_values is None:
+                    aggregated_values = np.zeros_like(values)
+                aggregated_values += values
 
-    # Convert lists to numpy arrays
-    X_train = np.array(image_data)
-    y_train = np.array(labels)
+    if images:
+        image_batch = np.stack(images, axis=0)
+        label_batch = np.stack(labels, axis=0)
+        return image_batch, label_batch, aggregated_values
+    return None, None, None
 
-    # Define your CNN model
-    model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=image_shape))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(3, activation='softmax'))
 
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+def train_cnn_to_evaluate_models(models, X_df, features, num_classes):
+    pdp_images, labels, aggregated_values = generate_pdp_images_and_labels(models, X_df, features, num_classes)
+    if pdp_images is None or len(pdp_images) == 0:
+        return None
 
-    # Train the model
-    model.fit(X_train, y_train, epochs=5, batch_size=32)  # Adjust epochs and batch_size as needed
+    pdp_images = pdp_images.astype('float32') / 255.0
 
-    return model
+    model = Sequential([
+        Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 3)),
+        MaxPooling2D((2, 2)),
+        Flatten(),
+        Dense(64, activation='relu'),
+        Dense(num_classes, activation='softmax')
+    ])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    history = model.fit(pdp_images, labels, batch_size=4, epochs=10, validation_split=0.2)
+
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Loss Over Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    if 'accuracy' in history.history:
+        plt.plot(history.history['accuracy'], label='Training Accuracy')
+        plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    elif 'acc' in history.history:
+        plt.plot(history.history['acc'], label='Training Accuracy')
+        plt.plot(history.history['val_acc'], label='Validation Accuracy')
+    plt.title('Accuracy Over Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+
+    return model, aggregated_values
+
+
+def plot_heatmap(aggregated_values):
+    if aggregated_values.ndim == 1:
+        aggregated_values = np.expand_dims(aggregated_values, axis=0)
+    plt.imshow(aggregated_values, cmap='hot', interpolation='nearest')
+    plt.colorbar()
+    plt.title('Aggregated PDP Values Heatmap')
+    plt.show()
+
+
+def evaluate_models_with_cnn(models, X_df, features, num_classes):
+    for model_name, model in models.items():
+        for feature_name in features:
+            pdp_isol = pdp.pdp_isolate(model=model, dataset=X_df, model_features=X_df.columns.tolist(),
+                                       feature=feature_name)
+            pdp.pdp_plot(pdp_isol, feature_name)
+            plt.title(f'PDP for {model_name} - {feature_name}')
+            plt.show()
+
+    cnn_model, aggregated_values = train_cnn_to_evaluate_models(models, X_df, features, num_classes)
+    if cnn_model is not None and aggregated_values is not None:
+        plot_heatmap(aggregated_values)
+
+
+def preprocess_for_cnn(images):
+    images = images.astype('float32')
+    images /= 255.0
+    if images.ndim == 3:
+        images = np.expand_dims(images, axis=-1)
+    return images
